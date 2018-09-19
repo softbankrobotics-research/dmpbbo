@@ -24,7 +24,7 @@
  * along with DmpBbo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
+#include <python2.7/Python.h>
 #include <string>
 #include <set>
 #include <fstream>
@@ -107,7 +107,7 @@ int main(int n_args, char* args[])
   Trajectory traj_demo = Trajectory::readFromFile(trajectory_file);
 
   double tau = traj_demo.duration();
-  //int n_time_steps = traj_demo.length();
+  int n_time_steps = traj_demo.length();
   VectorXd ts = traj_demo.ts(); // Time steps
   int n_dims_dmp = traj_demo.dim();
 
@@ -136,19 +136,19 @@ int main(int n_args, char* args[])
   //FunctionApproximatorGMR* fa_ptr = new FunctionApproximatorGMR(meta_parameters);
   //fa_ptr->train(inputs,targets);
 
-  // USE RBFN instead of LWR !!
-  //MetaParametersRBFN *meta_parameters_rbfn= new MetaParametersRBFN(input_dim,n_basis_functions);
-  //FunctionApproximatorRBFN* fa_ptr = new FunctionApproximatorRBFN(meta_parameters_rbfn);
+  // RBFN 
+  MetaParametersRBFN *meta_parameters_rbfn= new MetaParametersRBFN(input_dim,n_basis_functions);
+  FunctionApproximatorRBFN* fa_ptr = new FunctionApproximatorRBFN(meta_parameters_rbfn);
 
 
-  double   w_gen=0.2;
-  double   w_prune=0.8;
-  bool     update_D=true;
-  double   init_alpha=0.1;
-  double   penalty=0.005;
-  VectorXd init_D=VectorXd::Constant(input_dim,n_basis_functions);
-  MetaParametersLWPR* meta_parameters_lwpr = new MetaParametersLWPR(input_dim,init_D,w_gen,w_prune,update_D,init_alpha,penalty);
-  FunctionApproximatorLWPR* fa_ptr = new FunctionApproximatorLWPR(meta_parameters_lwpr);
+  //double   w_gen=0.2;
+  //double   w_prune=0.8;
+  //bool     update_D=true;
+  //double   init_alpha=0.1;
+  //double   penalty=0.005;
+  //VectorXd init_D=VectorXd::Constant(input_dim,n_basis_functions);
+  //MetaParametersLWPR* meta_parameters_lwpr = new MetaParametersLWPR(input_dim,init_D,w_gen,w_prune,update_D,init_alpha,penalty);
+  //FunctionApproximatorLWPR* fa_ptr = new FunctionApproximatorLWPR(meta_parameters_lwpr);
 
   // Clone the function approximator for each dimension of the DMP
   vector<FunctionApproximator*> function_approximators(n_dims_dmp);
@@ -178,13 +178,13 @@ int main(int n_args, char* args[])
 
   // Make the task solver
   set<string> parameters_to_optimize;
+  //parameters_to_optimize.insert("priors");
   //parameters_to_optimize.insert("slopes");
   //parameters_to_optimize.insert("centers");
   //parameters_to_optimize.insert("weights");
-  parameters_to_optimize.insert("centers");
-  parameters_to_optimize.insert("widths");
-  //parameters_to_optimize.insert("priors");
-  parameters_to_optimize.insert("offsets");
+  //parameters_to_optimize.insert("centers");
+  //parameters_to_optimize.insert("widths");
+  //parameters_to_optimize.insert("offsets");
 
   //LWR
   //parameters_to_optimize.insert("centers");
@@ -193,9 +193,9 @@ int main(int n_args, char* args[])
   //parameters_to_optimize.insert("slopes");
 
   //RBFN
-  //parameters_to_optimize.insert("centers");
-  //parameters_to_optimize.insert("widths");
-  //parameters_to_optimize.insert("weights");
+  parameters_to_optimize.insert("centers");
+  // parameters_to_optimize.insert("widths");
+  // parameters_to_optimize.insert("weights");
 
 
   // put the fact that I need to optimize the parameters

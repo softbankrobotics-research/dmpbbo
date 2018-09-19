@@ -94,6 +94,7 @@ Dmp::Dmp(double tau, Eigen::VectorXd y_init, Eigen::VectorXd y_attr,
   phase_system_(phase_system), gating_system_(gating_system), 
   forcing_term_scaling_(scaling)
 {
+  obstacles_ = NULL;
   initSubSystems(alpha_spring_damper, goal_system, phase_system, gating_system);
   initFunctionApproximators(function_approximators);
 }
@@ -108,6 +109,7 @@ Dmp::Dmp(int n_dims_dmp, std::vector<FunctionApproximator*> function_approximato
   phase_system_(phase_system), gating_system_(gating_system), function_approximators_(function_approximators),
   forcing_term_scaling_(scaling)
 {
+  obstacles_ = NULL;
   initSubSystems(alpha_spring_damper, goal_system, phase_system, gating_system);
   initFunctionApproximators(function_approximators);
 }
@@ -119,16 +121,29 @@ Dmp::Dmp(double tau, Eigen::VectorXd y_init, Eigen::VectorXd y_attr,
   : DynamicalSystem(1, tau, y_init, y_attr, "name"),
     forcing_term_scaling_(scaling)
 {  
+  obstacles_ = NULL;
   initSubSystems(dmp_type);
   initFunctionApproximators(function_approximators);
 }
   
+Dmp::Dmp(int n_dims_dmp, 
+         std::vector<FunctionApproximator*> function_approximators, Eigen::Vector3d* obstacles, 
+         DmpType dmp_type, ForcingTermScaling scaling)
+  : DynamicalSystem(1, 1.0, VectorXd::Zero(n_dims_dmp), VectorXd::Ones(n_dims_dmp), "name"),
+    forcing_term_scaling_(scaling)
+{
+  obstacles_ = obstacles;
+  initSubSystems(dmp_type);
+  initFunctionApproximators(function_approximators);
+}
+
 Dmp::Dmp(int n_dims_dmp, 
          std::vector<FunctionApproximator*> function_approximators, 
          DmpType dmp_type, ForcingTermScaling scaling)
   : DynamicalSystem(1, 1.0, VectorXd::Zero(n_dims_dmp), VectorXd::Ones(n_dims_dmp), "name"),
     forcing_term_scaling_(scaling)
 {
+  obstacles_ = NULL;
   initSubSystems(dmp_type);
   initFunctionApproximators(function_approximators);
 }
@@ -136,7 +151,7 @@ Dmp::Dmp(int n_dims_dmp,
 Dmp::Dmp(double tau, Eigen::VectorXd y_init, Eigen::VectorXd y_attr, double alpha_spring_damper, DynamicalSystem* goal_system) 
   : DynamicalSystem(1, tau, y_init, y_attr, "name"), forcing_term_scaling_(NO_SCALING)
 {
-  
+  obstacles_ = NULL;
   VectorXd one_1 = VectorXd::Ones(1);
   VectorXd one_0 = VectorXd::Zero(1);
   DynamicalSystem* phase_system  = new ExponentialSystem(tau,one_1,one_0,4);
@@ -166,7 +181,7 @@ void Dmp::initSubSystems(DmpType dmp_type)
   else if (dmp_type==KULVICIUS_2012_JOINING || dmp_type==COUNTDOWN_2013)
   {
     goal_system   = new ExponentialSystem(tau(),initial_state(),attractor_state(),15);
-    gating_system = new SigmoidSystem(tau(),one_1,2,0.9*tau()); 
+    gating_system = new SigmoidSystem(tau(),one_1,-1.1,0.9*tau()); 
     bool count_down = (dmp_type==COUNTDOWN_2013);    
     phase_system  = new TimeSystem(tau(),count_down);
   }
@@ -551,14 +566,21 @@ void Dmp::analyticalSolution(const Eigen::VectorXd& ts, Eigen::MatrixXd& xs, Eig
     xds.row(tt).SPRING = xd_spring;
     
     // If necessary add a perturbation. May be useful for some off-line tests.
-    RowVectorXd perturbation = RowVectorXd::Constant(dim_orig(),0.0);
-    if (analytical_solution_perturber_!=NULL)
-      for (int i_dim=0; i_dim<dim_orig(); i_dim++)
-        // Sample perturbation from a normal Gaussian distribution
-        perturbation(i_dim) = (*analytical_solution_perturber_)();
-      
-    // Add forcing term to the acceleration of the spring state
-    xds.row(tt).SPRING_Z = xds.row(tt).SPRING_Z + forcing_terms.row(tt)/tau() + perturbation;
+    // RowVectorXd perturbation = RowVectorXd::Constant(dim_orig(),0.0);
+    // if (analytical_solution_perturber_!=NULL)
+    //   for (int i_dim=0; i_dim<dim_orig(); i_dim++)
+    //     // Sample perturbation from a normal Gaussian distribution
+    //     perturbation(i_dim) = (*analytical_solution_perturber_)();
+    
+    if (obstacles_ != NULL){
+      // Add forcing term to the acceleration of the spring state
+      Map<RowVectorXd> perturbation(obstacles_->data(), dim_orig());
+      xds.row(tt).SPRING_Z = xds.row(tt).SPRING_Z + forcing_terms.row(tt)/tau() + perturbation/tau();       
+    } else {
+      // Add forcing term to the acceleration of the spring state
+      xds.row(tt).SPRING_Z = xds.row(tt).SPRING_Z + forcing_terms.row(tt)/tau();
+    }
+    
     // Compute y component from z
     xds.row(tt).SPRING_Y = xs.row(tt).SPRING_Z/tau();
     
@@ -578,7 +600,7 @@ void Dmp::computeFunctionApproximatorInputsAndTargets(const Trajectory& trajecto
   
   if (dim_orig()!=dim_data)
   {
-    cout << "WARNING: Cannot train " << dim_orig() << "-D DMP with " << dim_data << "-D data. Doing nothing." << endl;
+    cout << "WARNING: Cannot train " << dim_orig() << "-D DMP with " << dim_data << "-D data. Doing nothing." << "\n";
     return;
   }
   

@@ -120,8 +120,19 @@ public:
    *  \param dmp_type  The type of DMP, see Dmp::DmpType    
    *  \param scaling         Which method to use for scaling the forcing term (see Dmp::ForcingTermScaling)
    */
+  Dmp(int n_dims_dmp, std::vector<FunctionApproximator*> function_approximators, Eigen::Vector3d* obstacles = NULL,
+    DmpType dmp_type=KULVICIUS_2012_JOINING, ForcingTermScaling scaling=NO_SCALING);     
+
+  /**
+   *  Initialization constructor for Dmps of known dimensionality, but with unknown initial and
+   *  attractor states. Initializes the DMP with default dynamical systems.
+   *  \param n_dims_dmp      Dimensionality of the DMP
+   *  \param function_approximators Function approximators for the forcing term
+   *  \param dmp_type  The type of DMP, see Dmp::DmpType    
+   *  \param scaling         Which method to use for scaling the forcing term (see Dmp::ForcingTermScaling)
+   */
   Dmp(int n_dims_dmp, std::vector<FunctionApproximator*> function_approximators,
-    DmpType dmp_type=KULVICIUS_2012_JOINING, ForcingTermScaling scaling=NO_SCALING);      
+    DmpType dmp_type=KULVICIUS_2012_JOINING, ForcingTermScaling scaling=NO_SCALING);    
    
   /**
    *  Initialization constructor for Dmps without a forcing term.
@@ -360,7 +371,9 @@ private:
   /** Spring-damper system. Also see \ref page_dmp */
   SpringDamperSystem* spring_system_;
   /** @} */ // end of group_linear
-  
+
+  /** Matrix of the Coupling terms*/
+  Eigen::Vector3d* obstacles_;
   /** @name Non-linear open loop controller
    *  @{
    */ 

@@ -10,9 +10,9 @@ project(OO_DMP_BBO)
 option(BUILD_SHARED_LIBS "Enable this option to build shared libraries" OFF)
 
 if(BUILD_SHARED_LIBS)
-set(SHARED_OR_STATIC "SHARED")
-else()
 set(SHARED_OR_STATIC "STATIC")
+else()
+set(SHARED_OR_STATIC "SHARED")
 endif()
 
 
@@ -40,13 +40,16 @@ endif()
 
 # Appends the cmake/modules path inside the MAKE_MODULE_PATH variable which stores the
 # directories of additional CMake modules (ie. MacroOutOfSourceBuild.cmake):
-set(CMAKE_MODULE_PATH ${oo_dmp_bbo_SOURCE_DIR}/cmake/modules "${CMAKE_SOURCE_DIR}/src/functionapproximators/" ${CMAKE_MODULE_PATH})
+# set(CMAKE_MODULE_PATH ${oo_dmp_bbo_SOURCE_DIR}/cmake/modules "${CMAKE_SOURCE_DIR}/src/functionapproximators/" ${CMAKE_MODULE_PATH})
+set(CMAKE_MODULE_PATH ${oo_dmp_bbo_SOURCE_DIR}/cmake/modules "./src/functionapproximators/" ${CMAKE_MODULE_PATH})
 
-include_directories(${CMAKE_SOURCE_DIR}/src)
-link_directories(${CMAKE_SOURCE_DIR}/lib)
+# include_directories(${CMAKE_SOURCE_DIR}/src)
+# link_directories(${CMAKE_SOURCE_DIR}/lib)
+include_directories(src)
+link_directories(lib)
 
 IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
-  SET(CMAKE_INSTALL_PREFIX ${CMAKE_SOURCE_DIR} CACHE PATH "Comment" FORCE)
+  SET(CMAKE_INSTALL_PREFIX ./ CACHE PATH "Comment" FORCE)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 ###############################################################################
@@ -69,7 +72,7 @@ add_subdirectory(src)
 ###############################################################################
 # Generate doxygen documentation from CMake
 # http://www.bluequartz.net/projects/EIM_Segmentation/SoftwareDocumentation/html/usewithcmakeproject.html
-option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" ON)
+option(BUILD_DOCUMENTATION "Use Doxygen to create the HTML based API documentation" OFF)
 if(BUILD_DOCUMENTATION)
   FIND_PACKAGE(Doxygen)
   if (NOT DOXYGEN_FOUND)
@@ -77,7 +80,7 @@ if(BUILD_DOCUMENTATION)
       "Doxygen is needed to build the documentation. Please install it correctly")
   endif()
   #-- Configure the Template Doxyfile for our specific project
-  configure_file(${CMAKE_SOURCE_DIR}/docs/Doxyfile.in 
+  configure_file(docs/Doxyfile.in 
                  ${PROJECT_BINARY_DIR}/Doxyfile  @ONLY IMMEDIATE)
   #-- Add a custom target to run Doxygen when ever the project is built
   add_custom_target (Docs  

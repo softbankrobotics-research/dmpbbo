@@ -49,7 +49,7 @@ Trajectory::Trajectory(const Eigen::VectorXd& ts, const Eigen::MatrixXd& ys,  co
   assert(n_time_steps==ydds_.rows());
   if (misc_.cols()==0)
     misc_ = MatrixXd(n_time_steps,0);
-  assert(n_time_steps==misc_.rows());
+  // assert(n_time_steps==misc_.rows());
   
 #ifndef NDEBUG // Variables below are only required for asserts; check for NDEBUG to avoid warnings.
   int n_dims = ys_.cols();
@@ -274,6 +274,21 @@ Trajectory Trajectory::readFromFile(string filename, int n_dims_misc)
   ydds = traj_matrix.block(0,1+2*n_dims,n_time_steps,n_dims);
   misc = traj_matrix.block(0,1+3*n_dims,n_time_steps,n_dims_misc);
   
+  return Trajectory(ts,ys,yds,ydds,misc);
+
+}
+
+Trajectory Trajectory::createFromMatrix(const MatrixXd& traj_matrix, int n_dims_misc)
+{  
+  int n_dims       = (traj_matrix.cols()-1-n_dims_misc)/3;
+  int n_time_steps = traj_matrix.rows();
+  VectorXd ts; 
+  MatrixXd ys, yds, ydds, misc;
+  ts   = traj_matrix.block(0,0+0*n_dims,n_time_steps,1);
+  ys   = traj_matrix.block(0,1+0*n_dims,n_time_steps,n_dims);
+  yds  = traj_matrix.block(0,1+1*n_dims,n_time_steps,n_dims);
+  ydds = traj_matrix.block(0,1+2*n_dims,n_time_steps,n_dims);
+  misc = traj_matrix.block(0,1+3*n_dims,n_time_steps,n_dims_misc);
   return Trajectory(ts,ys,yds,ydds,misc);
 
 }

@@ -116,8 +116,8 @@ int main(int n_args, char** args)
   //int n_basis_functions = 20;
   int input_dim = 1;
   double intersection = 0.5;
-  MetaParametersLWR* meta_parameters = new MetaParametersLWR(input_dim,n_basis_functions,intersection);
-  FunctionApproximatorLWR* fa_lwr = new FunctionApproximatorLWR(meta_parameters);
+  MetaParametersGMR* meta_parameters = new MetaParametersGMR(input_dim,n_basis_functions);
+  FunctionApproximatorGMR* fa_lwr = new FunctionApproximatorGMR(meta_parameters);
 
   // Clone the function approximator for each dimension of the DMP
   vector<FunctionApproximator*> function_approximators(n_dims);
@@ -125,20 +125,20 @@ int main(int n_args, char** args)
     function_approximators[dd] = fa_lwr->clone();
 
 
-/*
 
+
+/*
   //RBFN
   int input_dim=1;
-  int n_basis_functions=90;
+  //int n_basis_functions=90;
   MetaParametersRBFN* meta_parameters=new MetaParametersRBFN(input_dim, n_basis_functions, 0.5);
   FunctionApproximatorRBFN* fa_rbfn=new FunctionApproximatorRBFN(meta_parameters);
 
   vector<FunctionApproximator*> function_approximators(n_dims);
   for (int dd=0; dd<n_dims; dd++)
     function_approximators[dd] = fa_rbfn->clone();
-
-
 */
+
 
   // CONSTRUCT AND TRAIN THE DMP
 

@@ -22,11 +22,12 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with DmpBbo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
+#include <python2.7/Python.h>
 #include <string>
 #include <set>
 #include <fstream>
 #include <eigen3/Eigen/Core>
+#include <iostream>
 
 #include "dmpbbo_io/EigenFileIO.hpp"
 
@@ -101,7 +102,7 @@ void readFromFile(string filename, MatrixXd& samples)
   int n_dims       = samples.rows()-1;
   int n_parameters = samples.cols();
 
-  //removeColumn(samples, n_parameters-1); // remove the last column because for some reason it repeats the last value twice
+  removeColumn(samples, n_parameters-1); // remove the last column because for some reason it repeats the last value twice
 
 }
 
@@ -177,21 +178,23 @@ int main(int n_args, char* args[])
   double intersection = 0.5;
   //MetaParametersLWR* meta_parameters = new MetaParametersLWR(input_dim,n_basis_functions,intersection);
   //FunctionApproximatorLWR* fa_ptr = new FunctionApproximatorLWR(meta_parameters);
-  int number_of_gaussians = pow(5,input_dim);
+  //int number_of_gaussians = pow(5,input_dim);
   //MetaParametersGMR* meta_parameters = new MetaParametersGMR(input_dim,n_basis_functions);
   //FunctionApproximatorGMR* fa_ptr = new FunctionApproximatorGMR(meta_parameters);
 
-  //MetaParametersRBFN *meta_parameters_rbfn= new MetaParametersRBFN(input_dim,n_basis_functions);
-  //FunctionApproximatorRBFN* fa_ptr = new FunctionApproximatorRBFN(meta_parameters_rbfn);
+  // RBFN 
+  MetaParametersRBFN *meta_parameters_rbfn= new MetaParametersRBFN(input_dim,n_basis_functions);
+  FunctionApproximatorRBFN* fa_ptr = new FunctionApproximatorRBFN(meta_parameters_rbfn);
 
-  double   w_gen=0.2;
-  double   w_prune=0.8;
-  bool     update_D=true;
-  double   init_alpha=0.1;
-  double   penalty=0.005;
-  VectorXd init_D=VectorXd::Constant(input_dim,n_basis_functions);
-  MetaParametersLWPR* meta_parameters_lwpr = new MetaParametersLWPR(input_dim,init_D,w_gen,w_prune,update_D,init_alpha,penalty);
-  FunctionApproximatorLWPR* fa_ptr = new FunctionApproximatorLWPR(meta_parameters_lwpr);
+
+  //double   w_gen=0.2;
+  //double   w_prune=0.8;
+  //bool     update_D=true;
+  //double   init_alpha=0.1;
+  //double   penalty=0.005;
+  //VectorXd init_D=VectorXd::Constant(input_dim,n_basis_functions);
+  //MetaParametersLWPR* meta_parameters_lwpr = new MetaParametersLWPR(input_dim,init_D,w_gen,w_prune,update_D,init_alpha,penalty);
+  //FunctionApproximatorLWPR* fa_ptr = new FunctionApproximatorLWPR(meta_parameters_lwpr);
 
   // Clone the function approximator for each dimension of the DMP
   vector<FunctionApproximator*> function_approximators(n_dims_dmp);
@@ -206,7 +209,8 @@ int main(int n_args, char* args[])
   Dmp* dmp = new Dmp(n_dims_dmp, function_approximators, Dmp::KULVICIUS_2012_JOINING);
 
   dmp->train(traj_demo);
-  //set<string> parameters_to_optimize;
+  set<string> parameters_to_optimize;
+  //parameters_to_optimize.insert("priors");
   //parameters_to_optimize.insert("slopes");
   //parameters_to_optimize.insert("centers");
   //parameters_to_optimize.insert("weights");
@@ -221,10 +225,10 @@ int main(int n_args, char* args[])
   //parameters_to_optimize.insert("slopes");
 
   //RBFN
-  //parameters_to_optimize.insert("centers");
-  //parameters_to_optimize.insert("widths");
-  //parameters_to_optimize.insert("weights");
-  //dmp->setSelectedParameters(parameters_to_optimize);
+  parameters_to_optimize.insert("centers");
+  // parameters_to_optimize.insert("widths");
+  // parameters_to_optimize.insert("weights");
+  dmp->setSelectedParameters(parameters_to_optimize);
 
 
   readFromFile(sample_file, samples);

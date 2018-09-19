@@ -164,7 +164,16 @@ public:
    *  \todo Replace this with >>operator
    */
   static Trajectory readFromFile(std::string filename, int n_dims_misc=0);
-  
+
+
+  /** Create a trajectory from a Matrix.
+   *
+   *  \param[in] traj_matrix The matrix from which the trajectory has to be created.
+   *  \param[in] n_dims_misc Number of miscellaneous variables. This is needed because the file contains a n_time_steps x N matrix, and we need to know which part of M represents the miscellaneous variables, and which part represents the trajectory. 
+   *  \return Trajectory that was created
+   */
+  static Trajectory createFromMatrix(const Eigen::MatrixXd& traj_matrix, int n_dims_misc=0);
+
   /** Generate a minimum-jerk trajectory from an initial to a final state.
    *
    * Velocities and accelerations are 0 at initial and final state.
